@@ -1,6 +1,7 @@
 import argparse
 import glob
 import os
+import time
 import warnings
 import torch
 
@@ -117,8 +118,8 @@ def run(input_path, output_path, model, gpu, show_user_warnings):
         # Inference for each image
         for i_test, data_test in enumerate(data_loader):
             # Log
-            print(f'({i_test + 1}/{len(input_path_list)}): {input_path_list[i_test].split("/")[-1]}')
-
+            start_time = time.time()
+            image_name = input_path_list[i_test].split("/")[-1]
             try:
                 # Prepare input
                 # noinspection PyUnresolvedReferences
@@ -141,8 +142,12 @@ def run(input_path, output_path, model, gpu, show_user_warnings):
                 # Clean
                 del d1, d2, d3, d4, d5, d6, d7
 
+                # Log
+                total_time = time.time() - start_time
+                print(f'({i_test + 1}/{len(input_path_list)}): {image_name} - {total_time:.2f}s')
+
             except Exception as e:
-                print(f'error: Image could not be processed: [{e}]')
+                print(f'({i_test + 1}/{len(input_path_list)}): Image [{image_name}] could not be processed: [{e}]')
                 print(e)
     else:
         print(f'Input path specified do not exist: [{input_path}]')
