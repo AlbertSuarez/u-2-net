@@ -13,6 +13,8 @@ jobs:
   build:
 
     runs-on: ubuntu-latest
+    env:
+      virtual-env: /opt/venv
 
     steps:
     - uses: actions/checkout@v2
@@ -24,6 +26,10 @@ jobs:
         python-version: 3.7
     - name: Pull files from Git LFS
       run: git lfs fetch --all
+    - name: Create virtualenv
+      run: |
+        python3 -m virtualenv --python=/usr/bin/python3 ${{env.virtual-env}}
+        source ${{env.virtual-env}}/bin/activate
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
