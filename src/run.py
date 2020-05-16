@@ -1,6 +1,7 @@
 import argparse
 import glob
 import os
+import warnings
 import torch
 
 from PIL import Image
@@ -21,6 +22,7 @@ def _parse_args():
     parser.add_argument('output_path', type=str)
     parser.add_argument('--model', type=str, default=Model.u2net, choices=Model.list())
     parser.add_argument('--gpu', action='store_true')
+    parser.add_argument('--show_user_warnings', action='store_true')
     return parser.parse_args()
 
 
@@ -59,15 +61,18 @@ def _save_output(input_image_name, prediction, output_folder_path):
     output_image.save(os.path.join(output_folder_path, f'{file_name}.png'))
 
 
-def run(input_path, output_path, model, gpu):
+def run(input_path, output_path, model, gpu, show_user_warnings):
     """
     Run inference using U^2-Net model.
     :param input_path: Input path (image or folder).
     :param output_path: Output path (has to be a folder).
     :param model: Model to use.
     :param gpu: If GPU is available or not.
+    :param show_user_warnings: If UserWarnings have to be showed or not.
     :return: All images processed.
     """
+    if not show_user_warnings:
+        warnings.simplefilter('ignore', UserWarning)
     if os.path.exists(output_path) and os.path.isfile(output_path):
         print(f'Output path exists and it is a file: [{output_path}].')
         return
@@ -145,4 +150,4 @@ def run(input_path, output_path, model, gpu):
 
 if __name__ == '__main__':
     args = _parse_args()
-    run(args.input_path, args.output_path, args.model, args.gpu)
+    run(args.input_path, args.output_path, args.model, args.gpu, args.show_user_warnings)
