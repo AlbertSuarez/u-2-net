@@ -31,9 +31,11 @@ jobs:
         python -m pip install --upgrade pip
         python -m pip install --user virtualenv
         python3 -m virtualenv --python=/usr/bin/python3 ${{env.virtual-env}}
-        source ${{env.virtual-env}}/bin/activate
     - name: Install dependencies
-      run: pip install -r requirements.lock
+      run: |
+        source ${{env.virtual-env}}/bin/activate
+        which python3
+        pip install -r requirements.lock
     - name: Lint with flake8
       run: |
         pip install flake8
@@ -42,4 +44,7 @@ jobs:
         # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
         flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
     - name: Run
-      run: python3 -m src.run examples/input examples/output
+      run: |
+        source ${{env.virtual-env}}/bin/activate
+        which python3
+        python3 -m src.run examples/input examples/output
