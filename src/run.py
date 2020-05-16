@@ -27,6 +27,45 @@ def _parse_args():
     return parser.parse_args()
 
 
+def _load_data(input_path_list):
+    """
+    Create DataLoader instance form input path list.
+    :param input_path_list: Input path list.
+    :return: DataLoader instance.
+    """
+    data_set = SalObjDataSet(
+        img_name_list=input_path_list,
+        lbl_name_list=[],
+        trans=transforms.Compose([RescaleT(320), ToTensorLab(flag=0)])
+    )
+    data_loader = DataLoader(
+        data_set,
+        batch_size=1,
+        shuffle=False,
+        num_workers=1
+    )
+    return data_loader
+
+
+def _define_model(model, model_path, gpu):
+    """
+    Define model given some parameters.
+    :param model: Model enumeration.
+    :param model_path: Model file path.
+    :param gpu: If GPU is available or not.
+    :return: Model instance.
+    """
+    net = model.value()
+    if gpu:
+        net.load_state_dict(torch.load(model_path))
+        if torch.cuda.is_available():
+            net.cuda()
+    else:
+        net.load_state_dict(torch.load(model_path, map_location='cpu'))
+    net.eval()
+    return net
+
+
 # noinspection PyUnresolvedReferences
 def _normalize_prediction(prediction):
     """
@@ -84,71 +123,52 @@ def run(input_path, output_path, model, gpu, show_user_warnings):
         elif os.path.isdir(input_path):
             input_path_list = glob.glob(os.path.join(input_path, '*'))
         else:
-            print(f'Input path specified is not a file or a folder.')
+            print(f'Input path specified is not a file or a folder: [{input_path}].')
             return
         print(f'Files to process: [{len(input_path_list)}]')
 
         # Get model path
         model_path = os.path.join('models', f'{model}.pth')
         print(f'Model path: [{model_path}]')
-
-        # Load data
-        data_set = SalObjDataSet(
-            img_name_list=input_path_list,
-            lbl_name_list=[],
-            trans=transforms.Compose([RescaleT(320), ToTensorLab(flag=0)])
-        )
-        data_loader = DataLoader(
-            data_set,
-            batch_size=1,
-            shuffle=False,
-            num_workers=1
-        )
-
-        # Define model
-        net = model.value()
-        if gpu:
-            net.load_state_dict(torch.load(model_path))
-            if torch.cuda.is_available():
-                net.cuda()
-        else:
-            net.load_state_dict(torch.load(model_path, map_location='cpu'))
-        net.eval()
-
-        # Inference for each image
-        for i_test, data_test in enumerate(data_loader):
-            # Log
-            start_time = time.time()
-            image_name = input_path_list[i_test].split("/")[-1]
-            try:
-                # Prepare input
-                # noinspection PyUnresolvedReferences
-                inputs_test = data_test['image'].type(torch.FloatTensor)
-                if torch.cuda.is_available():
-                    inputs_test = Variable(inputs_test.cuda())
-                else:
-                    inputs_test = Variable(inputs_test)
-
-                # Inference
-                d1, d2, d3, d4, d5, d6, d7 = net(inputs_test)
-
-                # Normalize
-                prediction = d1[:, 0, :, :]
-                prediction = _normalize_prediction(prediction)
-
-                # Save output
-                _save_output(input_path_list[i_test], prediction, output_path)
-
-                # Clean
-                del d1, d2, d3, d4, d5, d6, d7
-
+        if os.path.isfile(model_path):
+            data_loader = _load_data(input_path_list)
+            net = _define_model(model, model_path, gpu)
+            # Inference for each image
+            for i_test, data_test in enumerate(data_loader):
                 # Log
-                total_time = time.time() - start_time
-                print(f'({i_test + 1}/{len(input_path_list)}): {image_name} - {total_time:.2f}s')
+                start_time = time.time()
+                image_name = input_path_list[i_test].split("/")[-1]
+                try:
+                    # Prepare input
+                    # noinspection PyUnresolvedReferences
+                    inputs_test = data_test['image'].type(torch.FloatTensor)
+                    if torch.cuda.is_available():
+                        inputs_test = Variable(inputs_test.cuda())
+                    else:
+                        inputs_test = Variable(inputs_test)
 
-            except Exception as e:
-                print(f'({i_test + 1}/{len(input_path_list)}): Image [{image_name}] could not be processed: [{e}]')
-                print(e)
+                    # Inference
+                    d1, d2, d3, d4, d5, d6, d7 = net(inputs_test)
+
+                    # Normalize
+                    prediction = d1[:, 0, :, :]
+                    prediction = _normalize_prediction(prediction)
+
+                    # Save output
+                    _save_output(input_path_list[i_test], prediction, output_path)
+
+                    # Clean
+                    del d1, d2, d3, d4, d5, d6, d7
+
+                    # Log
+                    total_time = time.time() - start_time
+                    print(f'({i_test + 1}/{len(input_path_list)}): {image_name} - {total_time:.2f}s')
+
+                except Exception as e:
+                    print(f'({i_test + 1}/{len(input_path_list)}): Image [{image_name}] could not be processed: [{e}]')
+                    print(e)
+        else:
+            print(f'Model path specified do not exist: [{model_path}]')
     else:
         print(f'Input path specified do not exist: [{input_path}]')
 
