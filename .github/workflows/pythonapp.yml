@@ -33,4 +33,4 @@ jobs:
         flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
     - name: Run
       run: |
-        python3 -m src examples/input examples/output
+        python3 -m src.run examples/input examples/output
