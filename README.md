@@ -1,7 +1,10 @@
 # U^2-Net
 
-[![HitCount](http://hits.dwyl.io/AlbertSuarez/u-2-net.svg)](http://hits.dwyl.io/AlbertSuarez/u-2-net)
 ![Python application](https://github.com/AlbertSuarez/u-2-net/workflows/Python%20application/badge.svg)
+![Docker Image CI](https://github.com/AlbertSuarez/u-2-net/workflows/Docker%20Image%20CI/badge.svg)
+![Docker](https://github.com/AlbertSuarez/u-2-net/workflows/Docker/badge.svg)
+
+[![HitCount](http://hits.dwyl.io/AlbertSuarez/u-2-net.svg)](http://hits.dwyl.io/AlbertSuarez/u-2-net)
 [![GitHub stars](https://img.shields.io/github/stars/AlbertSuarez/u-2-net.svg)](https://GitHub.com/AlbertSuarez/u-2-net/stargazers/)
 [![GitHub forks](https://img.shields.io/github/forks/AlbertSuarez/u-2-net.svg)](https://GitHub.com/AlbertSuarez/u-2-net/network/)
 [![GitHub repo size in bytes](https://img.shields.io/github/repo-size/AlbertSuarez/u-2-net.svg)](https://github.com/AlbertSuarez/u-2-net)
@@ -57,7 +60,7 @@ This project is using Python3.7. All these requirements have been specified in t
 
 To create your environment and testing your own images, you must follow the next scripts:
 
-1. Pull models from Git LFS
+1. Pull models from [Git LFS](https://git-lfs.github.com/)
 
    ```bash
    git lfs fetch --all
@@ -97,7 +100,21 @@ python3 -m src.run INPUT_PATH OUTPUT_PATH [--model MODEL] [--gpu] [--show_user_w
 
 ### Docker
 
-TODO
+Before doing anything, you need to configure your local Docker installation for authenticating to [GitHub Packages](https://help.github.com/en/packages/using-github-packages-with-your-projects-ecosystem/configuring-docker-for-use-with-github-packages).
+
+Once that, you will just need to run the following command:
+
+```bash
+docker run \
+	-e "INPUT_PATH=input_path" \
+	-e "OUTPUT_PATH=output_path" \
+	-v "input_path:input_path" \
+	-v "output_path:output_path" \
+	--name u_2_net \
+	docker.pkg.github.com/albertsuarez/u-2-net/u-2-net
+```
+
+*INPUT_PATH* and *OUTPUT_PATH* are required environment variables for running the image. Volumes are needed as well because input files are not inside the Docker base image and for collecting the results from the host.
 
 ## Merits
 
