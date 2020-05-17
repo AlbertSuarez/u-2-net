@@ -1,0 +1,8 @@
+version: '3.5'
+services:
+
+  sut:
+    build: .
+    environment:
+      - INPUT_PATH=examples/input
+      - OUTPUT_PATH=examples/output
